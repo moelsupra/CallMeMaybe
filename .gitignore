@@ -1,0 +1,43 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Type checking and linting caches
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build and distribution artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Model and Hugging Face local caches
+.cache/
+hf_cache/
+
+# Project output directory (generated during runtime / peer review)
+data/output/
+output/
+
+# IDE and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
