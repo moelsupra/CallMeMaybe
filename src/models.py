@@ -31,4 +31,3 @@ class FunctionCallResult(BaseModel):
     prompt: str
     name: str
     parameters: dict[str, Any]
-

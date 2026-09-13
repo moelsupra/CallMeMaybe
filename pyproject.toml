@@ -24,3 +24,12 @@ dev = [
     "mypy>=2.3.1",
     "pytest>=9.1.1",
 ]
+
+[tool.mypy]
+exclude = [
+    "^\\.venv",
+    "^llm_sdk",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
