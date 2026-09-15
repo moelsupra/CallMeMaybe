@@ -4,8 +4,10 @@ import argparse
 import json
 import sys
 
+from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
 from pydantic import ValidationError
 from src.loader import load_function_definitions, load_prompt_tests
+from src.decoder import decode_prompt
 
 
 def parse_args_cli() -> argparse.Namespace:
@@ -72,6 +74,14 @@ def main() -> None:
         functions = load_function_definitions(args.functions_definition)
         prompts = load_prompt_tests(args.input)
         print(f"Loaded {len(functions)} functions and {len(prompts)} prompts.")
+
+        model = Small_LLM_Model()
+        results: list[dict[str, object]] = []
+        for prompt_test in prompts:
+            result = decode_prompt(model, prompt_test.prompt, functions)
+            results.append(result.model_dump())
+            print(f"  ✅ {result.name}({result.parameters})")
+
     except Exception as exc:
         handle_error(exc)
 
