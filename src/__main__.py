@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import sys
 
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
@@ -81,6 +82,11 @@ def main() -> None:
             result = decode_prompt(model, prompt_test.prompt, functions)
             results.append(result.model_dump())
             print(f"  ✅ {result.name}({result.parameters})")
+
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        with open(args.output, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
+        print(f"\n📄 Output written to {args.output}")
 
     except Exception as exc:
         handle_error(exc)
