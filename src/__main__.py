@@ -84,8 +84,8 @@ def main() -> None:
             print(f"  ✅ {result.name}({result.parameters})")
 
         os.makedirs(os.path.dirname(args.output), exist_ok=True)
-        with open(args.output, "w", encoding="utf-8") as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
+        with open(args.output, "w") as f:
+            json.dump(results, f, indent=4)
         print(f"\n📄 Output written to {args.output}")
 
     except Exception as exc:

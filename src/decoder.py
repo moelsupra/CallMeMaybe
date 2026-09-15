@@ -114,12 +114,13 @@ def extract_parameters(
     #     f"Function: {function_def.name}\n"
     #     f"Arguments: {{"
     # )
+    #choise parameter from user prompt request Arguments: {{
 
     prefix = (
         f"Task: {prompt}\n"
         f"Function: {function_def.name}\n"
         f"Description: {function_def.description}\n"
-        f"Arguments: {{"
+        f"choise parameter from prompt task, request Arguments: {{"
     )
 
     extracted: dict[str, Any] = {}
