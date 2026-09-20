@@ -4,10 +4,12 @@ import argparse
 import json
 import os
 import sys
-
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
-from pydantic import ValidationError
-from src.loader import load_function_definitions, load_prompt_tests
+from src.loader import (
+    handle_error,
+    load_function_definitions,
+    load_prompt_tests,
+)
 from src.decoder import decode_prompt
 
 
@@ -44,28 +46,6 @@ def parse_args_cli() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def handle_error(exc: Exception) -> None:
-    """Format user-facing errors cleanly and exit with status code 1."""
-    if isinstance(exc, FileNotFoundError):
-        print(f"[ERROR] File not found: '{exc.filename}'", file=sys.stderr)
-    elif isinstance(exc, json.JSONDecodeError):
-        print(
-            f"[ERROR] Invalid JSON syntax: {exc.msg} (line {exc.lineno})",
-            file=sys.stderr,
-        )
-    elif isinstance(exc, ValidationError):
-        for err in exc.errors():
-            field = " -> ".join(str(k) for k in err["loc"])
-            print(
-                f"[ERROR] Schema error on '{field}': {err['msg']}",
-                file=sys.stderr,
-            )
-    else:
-        print(f"[ERROR] {exc}", file=sys.stderr)
-
-    sys.exit(1)
-
-
 def main() -> None:
     """Run the CallMeMaybe application."""
     print("🤖 Starting CallMeMaybe...")
@@ -75,7 +55,7 @@ def main() -> None:
         functions = load_function_definitions(args.functions_definition)
         prompts = load_prompt_tests(args.input)
         print(f"Loaded {len(functions)} functions and {len(prompts)} prompts.")
-
+        # sys.exit(1)
         model = Small_LLM_Model()
         results: list[dict[str, object]] = []
         for prompt_test in prompts:

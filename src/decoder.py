@@ -7,7 +7,7 @@ token-by-token using the model's logits and schema constraints.
 import numpy as np
 from typing import Any
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
-from src.models import FunctionCallResult, FunctionDefinition
+from src.loader import FunctionCallResult, FunctionDefinition
 
 
 def select_function(
@@ -97,6 +97,9 @@ def extract_parameters(
     Returns:
         A dictionary mapping parameter names to their extracted values.
     """
+    if not function_def.parameters:
+        return {}
+
     # 1. Pre-compute number token IDs by encoding each digit char
     #    Qwen3 tokenizes numbers char-by-char: "42" -> [token_4, token_2]
     number_tids: set[int] = set()
@@ -114,7 +117,7 @@ def extract_parameters(
     #     f"Function: {function_def.name}\n"
     #     f"Arguments: {{"
     # )
-    #choise parameter from user prompt request Arguments: {{
+    # choise parameter from user prompt request Arguments: {{
 
     prefix = (
         f"Task: {prompt}\n"
