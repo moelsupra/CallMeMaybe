@@ -29,6 +29,3 @@ lint:
 lint-strict:
 	uv run flake8 . $(FLAKE8_FLAGS)
 	uv run mypy . --strict
-
-test:
-	uv run pytest

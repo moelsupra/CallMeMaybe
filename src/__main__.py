@@ -10,6 +10,7 @@ from src.loader import (
     load_prompt_tests,
 )
 from src.decoder import decode_prompt
+import time
 
 
 def parse_args_cli() -> argparse.Namespace:
@@ -57,11 +58,15 @@ def main() -> None:
 
         model = Small_LLM_Model()
         results: list[dict[str, object]] = []
+        start = time.perf_counter()
         for prompt_test in prompts:
             result = decode_prompt(model, prompt_test.prompt, functions)
             results.append(result.model_dump())
             print(f"  ✅ {result.name}({result.parameters})")
 
+        end = time.perf_counter()
+        min, sec = divmod(end-start, 60)
+        print(f"generation time: {int(min)}m {sec:.2f}s")
         os.makedirs(os.path.dirname(args.output), exist_ok=True)
         with open(args.output, "w") as f:
             json.dump(results, f, indent=4)

@@ -143,7 +143,7 @@ def extract_parameters(
                 number_tids if param_spec.type == "number" else integer_tids
             )
 
-            for _ in range(12):
+            for _ in range(len(prompt)):
                 logits = np.array(
                     model.get_logits_from_input_ids(input_ids)
                 )
@@ -184,7 +184,7 @@ def extract_parameters(
             input_ids = model.encode(prefix)[0].tolist()
             text_val = ""
 
-            for _ in range(50):
+            for _ in range(len(prompt)):
                 logits = np.array(
                     model.get_logits_from_input_ids(input_ids)
                 )
