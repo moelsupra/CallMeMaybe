@@ -3,7 +3,6 @@
 import argparse
 import json
 import os
-import sys
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
 from src.loader import (
     handle_error,
@@ -55,7 +54,7 @@ def main() -> None:
         functions = load_function_definitions(args.functions_definition)
         prompts = load_prompt_tests(args.input)
         print(f"Loaded {len(functions)} functions and {len(prompts)} prompts.")
-        # sys.exit(1)
+
         model = Small_LLM_Model()
         results: list[dict[str, object]] = []
         for prompt_test in prompts:

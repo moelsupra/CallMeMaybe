@@ -16,14 +16,15 @@ def select_function(
     functions: list[FunctionDefinition],
 ) -> str:
     """Select the best matching function using constrained decoding.
+
     Args:
         model: Loaded Small_LLM_Model instance.
         prompt: The user natural language request.
         functions: List of available FunctionDefinition objects.
+
     Returns:
         The exact string name of the selected function.
     """
-
     fn_tokens: dict[str, list[int]] = {
         fn.name: model.encode(fn.name)[0].tolist() for fn in functions
     }
@@ -86,8 +87,9 @@ def extract_parameters(
 ) -> dict[str, Any]:
     """Extract typed arguments using constrained decoding.
 
-    For numbers: only digit/dot/minus tokens are allowed (true masking).
-    For strings: greedy decoding until closing quote.
+    - For number/integer: digit token masking with type-appropriate casting.
+    - For boolean: direct logit comparison between true and false tokens.
+    - For strings: greedy decoding until closing quote delimiter.
 
     Args:
         model: Loaded Small_LLM_Model instance.
@@ -100,24 +102,23 @@ def extract_parameters(
     if not function_def.parameters:
         return {}
 
-    # 1. Pre-compute number token IDs by encoding each digit char
-    #    Qwen3 tokenizes numbers char-by-char: "42" -> [token_4, token_2]
     number_tids: set[int] = set()
     for c in "0123456789.-":
         tids = model.encode(c)[0].tolist()
         number_tids.update(tids)
 
+    integer_tids: set[int] = set()
+    for c in "0123456789-":
+        tids = model.encode(c)[0].tolist()
+        integer_tids.update(tids)
+
+    true_tid = model.encode("true")[0].tolist()[0]
+    false_tid = model.encode("false")[0].tolist()[0]
+
     stop_tids: set[int] = set()
     for c in [",", "}", " "]:
         tids = model.encode(c)[0].tolist()
         stop_tids.update(tids)
-
-    # prefix = (
-    #     f"Task: {prompt}\n"
-    #     f"Function: {function_def.name}\n"
-    #     f"Arguments: {{"
-    # )
-    # choise parameter from user prompt request Arguments: {{
 
     prefix = (
         f"Task: {prompt}\n"
@@ -133,10 +134,14 @@ def extract_parameters(
         if idx > 0:
             prefix += ", "
 
-        if param_spec.type == "number":
+        if param_spec.type in ("number", "integer"):
             prefix += f'"{param_name}": '
             input_ids = model.encode(prefix)[0].tolist()
             num_chars = ""
+
+            allowed_tids = (
+                number_tids if param_spec.type == "number" else integer_tids
+            )
 
             for _ in range(12):
                 logits = np.array(
@@ -144,7 +149,7 @@ def extract_parameters(
                 )
 
                 mask = np.full(len(logits), -np.inf)
-                for t_id in number_tids | stop_tids:
+                for t_id in allowed_tids | stop_tids:
                     mask[t_id] = logits[t_id]
                 best_token = int(np.argmax(mask))
 
@@ -155,13 +160,24 @@ def extract_parameters(
                 num_chars += tok_text.strip()
                 input_ids.append(best_token)
 
+            cast_fn = float if param_spec.type == "number" else int
             try:
-                val = float(num_chars)
+                val = cast_fn(num_chars)
             except ValueError:
-                val = 0.0
+                val = cast_fn(0)
 
             extracted[param_name] = val
             prefix += str(val)
+
+        elif param_spec.type == "boolean":
+            prefix += f'"{param_name}": '
+            input_ids = model.encode(prefix)[0].tolist()
+            logits = np.array(
+                model.get_logits_from_input_ids(input_ids)
+            )
+            bool_val = bool(logits[true_tid] > logits[false_tid])
+            extracted[param_name] = bool_val
+            prefix += "true" if bool_val else "false"
 
         else:
             prefix += f'"{param_name}": "'
